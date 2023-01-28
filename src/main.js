@@ -32,8 +32,8 @@ const terrain = genNoise(width, height).filter((item) => item !== 0);
 const xScale = 40;
 const gap = 400;
 
-const numPlayers = 300;
-const batchSize = location.hash.length > 1 ? parseInt(location.hash.slice(1)) : 100 / 4;
+const numPlayers = 600;
+const batchSize = location.hash.length > 1 ? parseInt(location.hash.slice(1)) : 100;
 let batch = 0;
 let gen = 0;
 let highestPerformance = 0;
@@ -54,13 +54,20 @@ const drawStats = (stats) => {
 };
 
 const train = () => {
+  players.splice(0, players.length, ...players.sort((a, b) => a.x - b.x));
   // where the good stuff happens
   const bestScore = players.reduce(
     (a, b) => (a > b.fitness ? a.fitness : b.fitness),
     players[0].fitness
   );
   console.log(bestScore);
-  const totalFitness = players.reduce((a, b) => a + b.fitness, players[0].fitness);
+	// only top 25% players make dem babies
+  const bestPlayers = players.slice(players.length - Math.floor(numPlayers / 4));
+  console.log([...bestPlayers.map((player) => player.x)]);
+  const totalFitness = bestPlayers.reduce(
+    (a, b) => a + b.fitness,
+    bestPlayers[0].fitness
+  );
   for (const player of players) {
     // select brain
     let goalSum = Math.random() * totalFitness;
@@ -69,7 +76,7 @@ const train = () => {
      * @type {Plane}
      */
     let parent;
-    for (const other of players) {
+    for (const other of bestPlayers) {
       runningSum += other.fitness;
       if (runningSum >= goalSum) {
         parent = other;

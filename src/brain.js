@@ -51,9 +51,9 @@ class Brain {
     return mutation;
   }
 
-  static mutationRate = 0.1;
+  static mutationRate = 0.2;
 
-  static maxMutationAmount = 0.05;
+  static maxMutationAmount = 0.1;
 
   render(inputNames, outputNames, prediction = null) {
     // if (!prediction) prediction = this.predict();
