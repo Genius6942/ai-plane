@@ -23,16 +23,17 @@ window.addEventListener("keyup", (e) => e.key === " " && (keydown = false));
 const genNoise = (size, maxHeight) => {
   return Array(size)
     .fill()
-    .map((_, idx) => Math.abs(noise.perlin2(idx / 100, 1)) * maxHeight);
+    .map((_, idx) => Math.abs(noise.perlin2((idx - 500) / 100, 1)) * maxHeight);
 };
 
 const height = 2000;
-const terrain = genNoise(10000, height).filter((item) => item !== 0);
-const xScale = 20;
+const width = 10000;
+const terrain = genNoise(width, height).filter((item) => item !== 0);
+const xScale = 40;
 const gap = 400;
 
 const numPlayers = 300;
-const batchSize = location.hash.length > 1 ? parseInt(location.hash.slice(1)) : 100 / 5;
+const batchSize = location.hash.length > 1 ? parseInt(location.hash.slice(1)) : 100 / 4;
 let batch = 0;
 let gen = 0;
 let highestPerformance = 0;
@@ -54,23 +55,36 @@ const drawStats = (stats) => {
 
 const train = () => {
   // where the good stuff happens
-  const bestScore = players.reduce((a, b) => (a > b.x ? a : b), players[0].x);
-  const totalFitness = players.reduce((a, b) => a + b.x, players[0].x);
-  players.reduce((a, b) => a + b.x, players[0].x);
-  players.forEach((player, idx) => {
-    if (player.x >= bestScore) player.color = "#00ff00";
-    else player.color = "red";
-    let left = (idx / players.length) * totalFitness;
-    for (const otherPlayer of players) {
-      if (left <= otherPlayer.x) {
-        console.log("evolving off a player with score of", otherPlayer.x);
-        player.evolve(otherPlayer.brain);
-      } else {
-        left -= otherPlayer.x;
+  const bestScore = players.reduce(
+    (a, b) => (a > b.fitness ? a.fitness : b.fitness),
+    players[0].fitness
+  );
+  console.log(bestScore);
+  const totalFitness = players.reduce((a, b) => a + b.fitness, players[0].fitness);
+  for (const player of players) {
+    // select brain
+    let goalSum = Math.random() * totalFitness;
+    let runningSum = 0;
+    /**
+     * @type {Plane}
+     */
+    let parent;
+    for (const other of players) {
+      runningSum += other.fitness;
+      if (runningSum >= goalSum) {
+        parent = other;
+        break;
       }
     }
-  });
-  console.log(totalFitness);
+    if (!parent) {
+      console.log("fallback:", runningSum, goalSum);
+      parent = players.reduce((a, b) => (a.fitness > b.fitness ? a : b));
+    }
+
+    // mutate dem babies
+
+    player.brain = parent.brain.mutate();
+  }
 };
 
 const render = () => {
@@ -154,7 +168,7 @@ const render = () => {
   ctx.strokeStyle = "black";
   ctx.lineWidth = 1;
 
-  setTimeout(render, 0);
+  requestAnimationFrame(render);
 };
 
 requestAnimationFrame(render);

@@ -53,7 +53,7 @@ class Plane {
 
     this.dead = false;
 
-		this.color = 'red';
+    this.color = "red";
 
     this.brain = new Brain(5, 2);
   }
@@ -210,11 +210,15 @@ class Plane {
     return [topLeft, topRight, bottomRight, bottomLeft];
   }
 
-	/**
-	 * 
-	 * @param {Brain} brain 
-	 */
-	evolve(brain) {
-		this.brain = brain.mutate();
-	}
+  /**
+   *
+   * @param {Brain} brain
+   */
+  evolve(brain) {
+    this.brain = brain.mutate();
+  }
+
+  get fitness() {
+    return this.x ** 3;
+  }
 }

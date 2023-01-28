@@ -23,7 +23,13 @@ class Brain {
     this.inputs = inputs;
     for (let i = 0; i < this.inputSize; i++) {
       for (let j = 0; j < this.outputSize; j++) {
-        output[j] += inputs[i] * this.connections[i][j];
+        try {
+          output[j] += inputs[i] * this.connections[i][j];
+        } catch (e) {
+          console.error(e);
+          console.log(i, j, output, inputs, this.connections, this.connections[i]);
+          throw new Error("oof");
+        }
         // if (!inputs[i]) console.log(i)
       }
     }
@@ -31,26 +37,26 @@ class Brain {
   }
 
   mutate() {
-    const mutation = new Brain(this.inputSize, this.outputSize);
+    // got to minus 1 for the bias wtf
+    const mutation = new Brain(this.inputSize - 1, this.outputSize);
     mutation.connections = [...this.connections.map((connection) => [...connection])];
-    mutation.connections.forEach((connection, outerIdx) => {
-      connection.forEach((link, innerIdx) => {
-        if (Math.random() < Brain.mutationRate) {
-          mutation.connections[outerIdx][innerIdx] +=
-            Math.random() * Brain.maxMutationAmount * 2 - Brain.maxMutationAmount;
-        }
-      });
-    });
+    mutation.connections = mutation.connections.map((connection) =>
+      connection.map((link) => {
+        return Math.random() < Brain.mutationRate
+          ? link + Math.random() * Brain.maxMutationAmount * 2 - Brain.maxMutationAmount
+          : link;
+      })
+    );
 
     return mutation;
   }
 
-  static mutationRate = 0.06;
+  static mutationRate = 0.1;
 
   static maxMutationAmount = 0.05;
 
   render(inputNames, outputNames, prediction = null) {
-		// if (!prediction) prediction = this.predict();
+    // if (!prediction) prediction = this.predict();
     const names = [...inputNames, "bias"];
     const gap = 50;
     const nodeRadius = 10;
